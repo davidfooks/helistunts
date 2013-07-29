@@ -171,8 +171,17 @@ function appCreate()
 
     var mappingTable;
 
+    var airSpeedElement = document.getElementById("airSpeed");
+    var altitudeElement = document.getElementById("altitude");
+
     var helicopterUpdate = function helicopterUpdateFn()
     {
+        if (airSpeedElement && altitudeElement)
+        {
+            airSpeedElement.innerHTML = mathDevice.v3Length(helicopterRigidBody.linearVelocity).toFixed(2);
+            altitudeElement.innerHTML = helicopterRigidBody.transform[10].toFixed(2);
+        }
+
         var heliUp = mathDevice.m43Up(helicopterRigidBody.transform);
         var yaw;
 
