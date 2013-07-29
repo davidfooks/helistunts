@@ -3,7 +3,6 @@
 /*global TurbulenzEngine: false*/
 /*global Floor: false */
 /*global Camera: false */
-/*global CameraController: false */
 /*global RequestHandler: false */
 /*global Scene: false */
 /*global SceneNode: false */
@@ -64,15 +63,7 @@ function appCreate()
 
     // Setup camera & controller
     var camera = Camera.create(mathDevice);
-    var cameraInitialize = function cameraInitializeFn()
-    {
-        var worldUp = mathDevice.v3BuildYAxis();
-        camera.lookAt(worldUp, worldUp, mathDevice.v3Build(0.0, 3.0, -15.0));
-        camera.updateViewMatrix();
-    };
-    cameraInitialize();
-
-    var cameraController = CameraController.create(graphicsDevice, inputDevice, camera);
+    var worldUp = mathDevice.v3BuildYAxis();
 
     var floor = Floor.create(graphicsDevice, mathDevice);
 
@@ -101,7 +92,7 @@ function appCreate()
     dynamicsWorld.addCollisionObject(floorObject);
 
     var boxShape = physicsDevice.createBoxShape({
-            halfExtents : [1.0, 1.0, 1.0],
+            halfExtents : [2.0, 1.0, 1.0],
             margin : collisionMargin
         });
 
@@ -139,15 +130,30 @@ function appCreate()
     scene.addRootNode(helicopterSceneNode);
 
     var keyCodes = inputDevice.keyCodes;
+    var mouseCodes = inputDevice.mouseCodes;
+
+    var onMouseMove = function onMouseMoveFn(deltaX, deltaY)
+    {
+        var rollAndPitch = mathDevice.v3Build(deltaX * 0.01, 0, -deltaY * 0.01);
+        helicopterRigidBody.angularVelocity = mathDevice.v3Add(helicopterRigidBody.angularVelocity, rollAndPitch);
+    };
+
+    var onMouseDown = function onMouseDownFn(mouseCode, x, y)
+    {
+        if (mouseCode === mouseCodes.BUTTON_0)
+        {
+            inputDevice.lockMouse();
+        }
+    };
 
     var onKeyUp = function physicsOnkeyUpFn(keynum)
     {
-        cameraController.onkeyup(keynum);
     };
 
     var onKeyDown = function physicsOnkeyDownFn(keynum)
     {
         var heliUp = mathDevice.m43Up(helicopterRigidBody.transform);
+        var yaw;
 
         if (keynum === keyCodes.UP)
         {
@@ -161,14 +167,23 @@ function appCreate()
             helicopterRigidBody.linearVelocity = mathDevice.v3Add(helicopterRigidBody.linearVelocity, heliDown);
             helicopterRigidBody.active = true;
         }
-        else
+        else if (keynum === keyCodes.LEFT)
         {
-            cameraController.onkeydown(keynum);
+            yaw = mathDevice.v3Build(0, 0.5, 0);
+            helicopterRigidBody.angularVelocity = mathDevice.v3Add(helicopterRigidBody.angularVelocity, yaw);
+        }
+        else if (keynum === keyCodes.RIGHT)
+        {
+            yaw = mathDevice.v3Build(0, -0.5, 0);
+            helicopterRigidBody.angularVelocity = mathDevice.v3Add(helicopterRigidBody.angularVelocity, yaw);
         }
     };
 
     inputDevice.addEventListener("keyup", onKeyUp);
     inputDevice.addEventListener("keydown", onKeyDown);
+
+    inputDevice.addEventListener('mousemove', onMouseMove);
+    inputDevice.addEventListener('mousedown', onMouseDown);
 
     var mappingTable;
 
@@ -176,8 +191,13 @@ function appCreate()
     {
         var currentTime = TurbulenzEngine.time;
 
-        //inputDevice.update();
-        cameraController.update();
+        var heliPos = mathDevice.m43Pos(helicopterRigidBody.transform);
+        var cameraPos = mathDevice.v3Add(heliPos, mathDevice.v3Build(-15.0, 3.0, 0.0));
+
+        camera.lookAt(heliPos, worldUp, cameraPos);
+        camera.updateViewMatrix();
+
+        inputDevice.update();
 
         var aspectRatio = (graphicsDevice.width / graphicsDevice.height);
         if (aspectRatio !== camera.aspectRatio)
