@@ -176,27 +176,27 @@ function appCreate()
         var heliUp = mathDevice.m43Up(helicopterRigidBody.transform);
         var yaw;
 
-        if (keyDown[keyCodes.UP])
+        if (keyDown[keyCodes.UP] || keyDown[keyCodes.W])
         {
             heliUp = mathDevice.v3ScalarMul(heliUp, 0.3, heliUp);
             helicopterRigidBody.linearVelocity = mathDevice.v3Add(helicopterRigidBody.linearVelocity, heliUp);
             helicopterRigidBody.active = true;
         }
-        else if (keyDown[keyCodes.DOWN])
+        else if (keyDown[keyCodes.DOWN] || keyDown[keyCodes.S])
         {
             var heliDown = mathDevice.v3ScalarMul(heliUp, -0.3, heliUp);
             helicopterRigidBody.linearVelocity = mathDevice.v3Add(helicopterRigidBody.linearVelocity, heliDown);
             helicopterRigidBody.active = true;
         }
 
-        if (keyDown[keyCodes.LEFT])
+        if (keyDown[keyCodes.LEFT] || keyDown[keyCodes.A])
         {
             yaw = mathDevice.v3Build(0, 0.1, 0);
             mathDevice.m43TransformVector(helicopterRigidBody.transform, yaw, yaw);
             helicopterRigidBody.angularVelocity = mathDevice.v3Add(helicopterRigidBody.angularVelocity, yaw);
             helicopterRigidBody.active = true;
         }
-        else if (keyDown[keyCodes.RIGHT])
+        else if (keyDown[keyCodes.RIGHT] || keyDown[keyCodes.D])
         {
             yaw = mathDevice.v3Build(0, -0.1, 0);
             mathDevice.m43TransformVector(helicopterRigidBody.transform, yaw, yaw);
