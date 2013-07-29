@@ -24,6 +24,7 @@
 
 /*{# Game code javascript includes #}*/
 /*{{ javascript("scripts/app.js") }}*/
+/*{{ javascript("scripts/defaultmap.js") }}*/
 
 /*global TurbulenzEngine: false*/
 /*global appCreate: false */

@@ -11,6 +11,8 @@
 /*global TurbulenzServices: false */
 /*global DefaultRendering: false */
 /*global EffectManager: false */
+
+/*global DefaultMap: false */
 /*exported appCreate*/
 
 var appDestroyCallback;
@@ -129,6 +131,8 @@ function appCreate()
     physicsManager.dynamicPhysicsNodes.push(physicsNode);
     scene.addRootNode(helicopterSceneNode);
 
+    DefaultMap.create(physicsDevice, mathDevice, physicsManager, dynamicsWorld, scene);
+
     var keyCodes = inputDevice.keyCodes;
     var mouseCodes = inputDevice.mouseCodes;
 
@@ -210,7 +214,6 @@ function appCreate()
         /*var cameraPos = mathDevice.v3Build(-15.0, 3.0, 0.0);
         mathDevice.m43TransformPoint(helicopterRigidBody.transform, cameraPos, cameraPos);*/
 
-
         var cameraDeltaY = mathDevice.m43Up(helicopterRigidBody.transform);
         mathDevice.v3ScalarMul(cameraDeltaY, 3.0, cameraDeltaY);
 
@@ -218,7 +221,6 @@ function appCreate()
         mathDevice.v3ScalarMul(cameraDeltaX, -15.0, cameraDeltaX);
 
         var cameraPos = mathDevice.v3Add(heliPos, mathDevice.v3Add(cameraDeltaX, cameraDeltaY));
-
 
         camera.lookAt(heliPos, worldUp, cameraPos);
         camera.updateViewMatrix();
