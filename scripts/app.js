@@ -131,7 +131,7 @@ function appCreate()
     physicsManager.dynamicPhysicsNodes.push(physicsNode);
     scene.addRootNode(helicopterSceneNode);
 
-    DefaultMap.create(physicsDevice, mathDevice, physicsManager, dynamicsWorld, scene);
+    var map = DefaultMap.create(physicsDevice, mathDevice, physicsManager, dynamicsWorld, scene);
 
     var keyCodes = inputDevice.keyCodes;
     var mouseCodes = inputDevice.mouseCodes;
@@ -235,6 +235,8 @@ function appCreate()
         camera.updateViewMatrix();
 
         inputDevice.update();
+
+        map.update(helicopterRigidBody);
 
         helicopterUpdate();
 

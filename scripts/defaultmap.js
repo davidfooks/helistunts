@@ -2,12 +2,27 @@
 // DefaultMap - class description
 //
 
+/*global Sensor: false */
 /*global SceneNode: false */
 
 function DefaultMap() {}
 
 DefaultMap.prototype =
 {
+    update : function defaultmapUpdateFn(helicopterRigidBody)
+    {
+        var sensors = this.sensors;
+        var sensorsLength = sensors.length;
+        var sensorsIndex;
+
+        for (sensorsIndex = 0; sensorsIndex < sensorsLength; sensorsIndex += 1)
+        {
+            if (sensors[sensorsIndex].complete(helicopterRigidBody))
+            {
+                console.log('Sensor complete: ' + sensorsIndex);
+            }
+        }
+    }
 };
 
 DefaultMap.create = function defaultMapCreateFn(physicsDevice, mathDevice, physicsManager, dynamicsWorld, scene)
@@ -41,7 +56,7 @@ DefaultMap.create = function defaultMapCreateFn(physicsDevice, mathDevice, physi
                 friction : 0.5,
                 restitution : 0.3,
                 frozen : false,
-                active : false
+                active : true
             });
         }
         else
@@ -106,8 +121,12 @@ DefaultMap.create = function defaultMapCreateFn(physicsDevice, mathDevice, physi
     addBox([4.0, 1.0, 4.0], -35.0, 21.0,   0.0);
     addBox([4.0, 1.0, 4.0], 0.0,   21.0, -35.0);
 
+    defaultMap.sensors = [
+        Sensor.create(mathDevice, [5, 5, 5], mathDevice.v3Build(35, 26, 0), mathDevice.v3Build(0, 1, 0))
+    ];
+
     // topple
-    /*addBox([0.5, 0.5, 0.5], 35.0, 22.5, 0.0, true);
+    /*addBox([0.5, 0.5, 0.5], 35.0, 21.5, 0.0, true);
     addBox([0.5, 0.5, 0.5], 35.0, 23.5, 0.0, true);
     addBox([0.5, 0.5, 0.5], 35.0, 24.5, 0.0, true);
     addBox([0.5, 0.5, 0.5], 35.0, 25.5, 0.0, true);
