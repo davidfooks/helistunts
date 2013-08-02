@@ -102,10 +102,11 @@ function appCreate()
     inertia = mathDevice.v3ScalarMul(inertia, 1.0);
 
     // Initial box is created as a rigid body
+    var initTransform = mathDevice.m43BuildTranslation(0.0, 5.0, 0.0);
     var helicopterRigidBody = physicsDevice.createRigidBody({
         shape : boxShape,
         mass : 20.0,
-        transform : mathDevice.m43BuildTranslation(0.0, 5.0, 0.0),
+        transform : initTransform,
         friction : 0.5,
         restitution : 0.3,
         angularDamping: 0.9,
@@ -156,6 +157,13 @@ function appCreate()
     var onKeyUp = function physicsOnkeyUpFn(keynum)
     {
         keyDown[keynum] = false;
+
+        if (keynum === keyCodes.R)
+        {
+            helicopterRigidBody.transform = initTransform;
+            helicopterRigidBody.linearVelocity = mathDevice.v3BuildZero();
+            helicopterRigidBody.angularVelocity = mathDevice.v3BuildZero();
+        }
     };
 
     var onKeyDown = function physicsOnkeyDownFn(keynum)
