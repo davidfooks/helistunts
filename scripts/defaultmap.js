@@ -155,5 +155,12 @@ DefaultMap.create = function defaultMapCreateFn(physicsDevice, mathDevice, physi
     // arch end pillar landing pad
     addBox([4.0, 1.0, 4.0], 250.0,  21.0,   0.0);
 
+    // tunnel
+    addBox([2.0, 10.0, 100.0], -35.0, 10.0, 200.0);
+    addBox([2.0, 10.0, 100.0], 35.0, 10.0, 200.0);
+    // arch bar
+    addBox([35.0, 1.0, 100.0],  0.0, 21.0, 200.0);
+
+
     return defaultMap;
 };
