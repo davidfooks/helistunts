@@ -5,7 +5,6 @@
 /*global Camera: false */
 /*global RequestHandler: false */
 /*global Scene: false */
-/*global SceneNode: false */
 /*global ShaderManager: false */
 /*global PhysicsManager: false */
 /*global TurbulenzServices: false */
@@ -13,6 +12,7 @@
 /*global EffectManager: false */
 
 /*global DefaultMap: false */
+/*global Helicopter: false */
 /*exported appCreate*/
 
 var appDestroyCallback;
@@ -29,10 +29,13 @@ function appCreate()
         versionElem.innerHTML = TurbulenzEngine.version;
     }
 
+    var globals = {};
+
     var intervalID;
 
     var graphicsDeviceParameters = { };
-    var graphicsDevice = TurbulenzEngine.createGraphicsDevice(graphicsDeviceParameters);
+    var graphicsDevice = globals.graphicsDevice = TurbulenzEngine.createGraphicsDevice(graphicsDeviceParameters);
+
 
     if (!graphicsDevice.shadingLanguageVersion)
     {
@@ -42,30 +45,30 @@ function appCreate()
     }
 
     var mathDeviceParameters = {};
-    var mathDevice = TurbulenzEngine.createMathDevice(mathDeviceParameters);
+    var mathDevice = globals.mathDevice = TurbulenzEngine.createMathDevice(mathDeviceParameters);
 
     var inputDeviceParameters = { };
-    var inputDevice = TurbulenzEngine.createInputDevice(inputDeviceParameters);
+    var inputDevice = globals.inputDevice = TurbulenzEngine.createInputDevice(inputDeviceParameters);
 
     var requestHandlerParameters = {};
-    var requestHandler = RequestHandler.create(requestHandlerParameters);
+    var requestHandler = globals.requestHandler = RequestHandler.create(requestHandlerParameters);
 
     var physicsDeviceParameters = { };
-    var physicsDevice = TurbulenzEngine.createPhysicsDevice(physicsDeviceParameters);
+    var physicsDevice = globals.physicsDevice = TurbulenzEngine.createPhysicsDevice(physicsDeviceParameters);
 
     var dynamicsWorldParameters = { };
-    var dynamicsWorld = physicsDevice.createDynamicsWorld(dynamicsWorldParameters);
+    var dynamicsWorld = globals.dynamicsWorld = physicsDevice.createDynamicsWorld(dynamicsWorldParameters);
 
-    var shaderManager = ShaderManager.create(graphicsDevice, requestHandler, null, errorCallback);
-    var effectManager = EffectManager.create();
-    var physicsManager = PhysicsManager.create(mathDevice, physicsDevice, dynamicsWorld);
+    var shaderManager = globals.shaderManager = ShaderManager.create(graphicsDevice, requestHandler, null, errorCallback);
+    var effectManager = globals.effectManager = EffectManager.create();
+    var physicsManager = globals.physicsManager = PhysicsManager.create(mathDevice, physicsDevice, dynamicsWorld);
 
     var renderer;
-    var scene = Scene.create(mathDevice);
+    var scene = globals.scene = Scene.create(mathDevice);
 
     // Setup camera & controller
-    var camera = Camera.create(mathDevice);
-    var worldUp = mathDevice.v3BuildYAxis();
+    var camera = globals.camera = Camera.create(mathDevice);
+    var worldUp = globals.worldUp = mathDevice.v3BuildYAxis();
 
     var floor = Floor.create(graphicsDevice, mathDevice);
 
@@ -93,55 +96,28 @@ function appCreate()
     // Adds the floor collision object to the physicsDevice
     dynamicsWorld.addCollisionObject(floorObject);
 
-    var boxShape = physicsDevice.createBoxShape({
-            halfExtents : [2.0, 1.0, 1.0],
-            margin : collisionMargin
-        });
-
-    var inertia = mathDevice.v3Copy(boxShape.inertia);
-    inertia = mathDevice.v3ScalarMul(inertia, 1.0);
-
-    // Initial box is created as a rigid body
-    var initTransform = mathDevice.m43BuildTranslation(0.0, 5.0, 0.0);
-    var helicopterRigidBody = physicsDevice.createRigidBody({
-        shape : boxShape,
-        mass : 20.0,
-        transform : initTransform,
-        friction : 0.5,
-        restitution : 0.3,
-        angularDamping: 0.9,
-        frozen : false,
-        active : true
+    var map = DefaultMap.create(globals);
+    var helicopter = Helicopter.create(globals, {
+        collectiveInputAcceleration: 25.0,
+        collectiveRest: 0, //8,
+        rudderAcceleration: 3,
+        cyclicAcceleration: 0.3
     });
-    dynamicsWorld.addRigidBody(helicopterRigidBody);
 
-    var position = mathDevice.m43BuildTranslation(0.0, 5.0, 0.0);
-    var helicopterSceneNode = SceneNode.create({
-            name: 'HeliPhys',
-            local: position,
-            dynamic: true,
-            disabled: false
-        });
-
-    var physicsNode = {
-        body : helicopterRigidBody,
-        target : helicopterSceneNode,
-        dynamic : true
-    };
-    physicsManager.physicsNodes.push(physicsNode);
-    physicsManager.dynamicPhysicsNodes.push(physicsNode);
-    scene.addRootNode(helicopterSceneNode);
-
-    var map = DefaultMap.create(physicsDevice, mathDevice, physicsManager, dynamicsWorld, scene);
+    var initTransform = mathDevice.m43BuildTranslation(0.0, 5.0, 0.0);
+    helicopter.addPhysics(initTransform);
 
     var keyCodes = inputDevice.keyCodes;
     var mouseCodes = inputDevice.mouseCodes;
 
+    var keyDown = {};
+    var mouseDeltaX = 0;
+    var mouseDeltaY = 0;
+
     var onMouseMove = function onMouseMoveFn(deltaX, deltaY)
     {
-        var rollAndPitch = mathDevice.v3Build(deltaX * 0.01, 0, -deltaY * 0.01);
-        mathDevice.m43TransformVector(helicopterRigidBody.transform, rollAndPitch, rollAndPitch);
-        helicopterRigidBody.angularVelocity = mathDevice.v3Add(helicopterRigidBody.angularVelocity, rollAndPitch);
+        mouseDeltaX += deltaX;
+        mouseDeltaY += deltaY;
     };
 
     var onMouseDown = function onMouseDownFn(mouseCode, x, y)
@@ -152,17 +128,13 @@ function appCreate()
         }
     };
 
-    var keyDown = {};
-
     var onKeyUp = function physicsOnkeyUpFn(keynum)
     {
         keyDown[keynum] = false;
 
         if (keynum === keyCodes.R)
         {
-            helicopterRigidBody.transform = initTransform;
-            helicopterRigidBody.linearVelocity = mathDevice.v3BuildZero();
-            helicopterRigidBody.angularVelocity = mathDevice.v3BuildZero();
+            helicopter.teleport(mathDevice.m43BuildTranslation(0.0, 5.0, 0.0));
         }
     };
 
@@ -182,59 +154,28 @@ function appCreate()
     var airSpeedElement = document.getElementById("airSpeed");
     var altitudeElement = document.getElementById("altitude");
 
-    var helicopterUpdate = function helicopterUpdateFn()
-    {
-        if (airSpeedElement && altitudeElement)
-        {
-            airSpeedElement.innerHTML = mathDevice.v3Length(helicopterRigidBody.linearVelocity).toFixed(2);
-            altitudeElement.innerHTML = helicopterRigidBody.transform[10].toFixed(2);
-        }
-
-        var heliUp = mathDevice.m43Up(helicopterRigidBody.transform);
-        var yaw;
-
-        if (keyDown[keyCodes.UP] || keyDown[keyCodes.W])
-        {
-            heliUp = mathDevice.v3ScalarMul(heliUp, 0.3, heliUp);
-            helicopterRigidBody.linearVelocity = mathDevice.v3Add(helicopterRigidBody.linearVelocity, heliUp);
-            helicopterRigidBody.active = true;
-        }
-        else if (keyDown[keyCodes.DOWN] || keyDown[keyCodes.S])
-        {
-            var heliDown = mathDevice.v3ScalarMul(heliUp, -0.3, heliUp);
-            helicopterRigidBody.linearVelocity = mathDevice.v3Add(helicopterRigidBody.linearVelocity, heliDown);
-            helicopterRigidBody.active = true;
-        }
-
-        if (keyDown[keyCodes.LEFT] || keyDown[keyCodes.A])
-        {
-            yaw = mathDevice.v3Build(0, 0.1, 0);
-            mathDevice.m43TransformVector(helicopterRigidBody.transform, yaw, yaw);
-            helicopterRigidBody.angularVelocity = mathDevice.v3Add(helicopterRigidBody.angularVelocity, yaw);
-            helicopterRigidBody.active = true;
-        }
-        else if (keyDown[keyCodes.RIGHT] || keyDown[keyCodes.D])
-        {
-            yaw = mathDevice.v3Build(0, -0.1, 0);
-            mathDevice.m43TransformVector(helicopterRigidBody.transform, yaw, yaw);
-            helicopterRigidBody.angularVelocity = mathDevice.v3Add(helicopterRigidBody.angularVelocity, yaw);
-            helicopterRigidBody.active = true;
-        }
-    };
+    var previousFrameTime = 0;
 
     var mainLoop = function mainLoopFn()
     {
         var currentTime = TurbulenzEngine.time;
+        var delta = currentTime - previousFrameTime;
+        if (delta > 0.1)
+        {
+            delta = 0.1;
+        }
+        previousFrameTime = TurbulenzEngine.time;
 
-        var heliPos = mathDevice.m43Pos(helicopterRigidBody.transform);
+        var heliPos = helicopter.getPosition();
+        var heliTransform = helicopter.getTransform();
 
         /*var cameraPos = mathDevice.v3Build(-15.0, 3.0, 0.0);
         mathDevice.m43TransformPoint(helicopterRigidBody.transform, cameraPos, cameraPos);*/
 
-        var cameraDeltaY = mathDevice.m43Up(helicopterRigidBody.transform);
+        var cameraDeltaY = mathDevice.m43Up(heliTransform);
         mathDevice.v3ScalarMul(cameraDeltaY, 3.0, cameraDeltaY);
 
-        var cameraDeltaX = mathDevice.m43Right(helicopterRigidBody.transform);
+        var cameraDeltaX = mathDevice.m43Right(heliTransform);
         mathDevice.v3ScalarMul(cameraDeltaX, -15.0, cameraDeltaX);
 
         var cameraPos = mathDevice.v3Add(heliPos, mathDevice.v3Add(cameraDeltaX, cameraDeltaY));
@@ -244,9 +185,18 @@ function appCreate()
 
         inputDevice.update();
 
-        map.update(helicopterRigidBody);
+        map.update(helicopter);
 
-        helicopterUpdate();
+        if (airSpeedElement && altitudeElement)
+        {
+            var helicopterDisplays = helicopter.getDisplays();
+            airSpeedElement.innerHTML = helicopterDisplays.airSpeed;
+            altitudeElement.innerHTML = helicopterDisplays.altitude;
+        }
+
+        helicopter.update(delta, keyDown, mouseDeltaX, mouseDeltaY);
+        mouseDeltaX = 0;
+        mouseDeltaY = 0;
 
         var aspectRatio = (graphicsDevice.width / graphicsDevice.height);
         if (aspectRatio !== camera.aspectRatio)

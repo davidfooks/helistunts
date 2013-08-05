@@ -26,6 +26,7 @@
 /*{{ javascript("scripts/app.js") }}*/
 /*{{ javascript("scripts/sensor.js") }}*/
 /*{{ javascript("scripts/defaultmap.js") }}*/
+/*{{ javascript("scripts/helicopter.js") }}*/
 
 /*global TurbulenzEngine: false*/
 /*global appCreate: false */

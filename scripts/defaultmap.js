@@ -9,8 +9,9 @@ function DefaultMap() {}
 
 DefaultMap.prototype =
 {
-    update : function defaultmapUpdateFn(helicopterRigidBody)
+    update : function defaultmapUpdateFn(helicopter)
     {
+        var helicopterRigidBody = helicopter.rigidBody;
         var sensors = this.sensors;
         var sensorsLength = sensors.length;
         var sensorsIndex;
@@ -19,14 +20,20 @@ DefaultMap.prototype =
         {
             if (sensors[sensorsIndex].complete(helicopterRigidBody))
             {
-                console.log('Sensor complete: ' + sensorsIndex);
+                window.console.log('Sensor complete: ' + sensorsIndex);
             }
         }
     }
 };
 
-DefaultMap.create = function defaultMapCreateFn(physicsDevice, mathDevice, physicsManager, dynamicsWorld, scene)
+DefaultMap.create = function defaultMapCreateFn(globals)
 {
+    var physicsDevice = globals.physicsDevice;
+    var mathDevice = globals.mathDevice;
+    var physicsManager = globals.physicsManager;
+    var dynamicsWorld = globals.dynamicsWorld;
+    var scene = globals.scene;
+
     var defaultMap = new DefaultMap();
 
     var count = 0;
@@ -45,10 +52,12 @@ DefaultMap.create = function defaultMapCreateFn(physicsDevice, mathDevice, physi
         var inertia = mathDevice.v3Copy(boxShape.inertia);
         inertia = mathDevice.v3ScalarMul(inertia, 1.0);
 
+        var boxBody;
+
         // Initial box is created as a rigid body
         if (dynamic)
         {
-            var boxBody = physicsDevice.createRigidBody({
+            boxBody = physicsDevice.createRigidBody({
                 shape : boxShape,
                 mass: 1.0,
                 inertia: inertia,
@@ -61,7 +70,7 @@ DefaultMap.create = function defaultMapCreateFn(physicsDevice, mathDevice, physi
         }
         else
         {
-            var boxBody = physicsDevice.createCollisionObject({
+            boxBody = physicsDevice.createCollisionObject({
                 shape : boxShape,
                 transform : mathDevice.m43BuildTranslation(x, y, z),
                 friction : 0.5,
