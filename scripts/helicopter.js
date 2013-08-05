@@ -77,7 +77,7 @@ Helicopter.prototype =
 
         var tmpRollAndPitch = this.tmpRollAndPitch;
         var deltaAcceleration = this.cyclicAcceleration * delta;
-        mathDevice.v3Build(mouseDeltaX * deltaAcceleration, 0, -mouseDeltaY * deltaAcceleration, tmpRollAndPitch);
+        mathDevice.v3Build(mouseDeltaY * deltaAcceleration, 0, mouseDeltaX * deltaAcceleration, tmpRollAndPitch);
         mathDevice.m43TransformVector(helicopterRigidBody.transform, tmpRollAndPitch, tmpRollAndPitch);
         helicopterRigidBody.angularVelocity = mathDevice.v3Add(helicopterRigidBody.angularVelocity, tmpRollAndPitch);
 
@@ -96,7 +96,7 @@ Helicopter.prototype =
         var scene = this.globals.scene;
 
         var boxShape = physicsDevice.createBoxShape({
-                halfExtents : [2.0, 1.0, 1.0],
+                halfExtents : [1.0, 1.0, 2.0],
                 margin : collisionMargin
             });
 
@@ -145,9 +145,9 @@ Helicopter.prototype =
         };
     },
 
-    getPosition : function helicopterGetPositionFn()
+    getLinearVelocity : function helicopterGetLinearVelocityFn()
     {
-        return this.globals.mathDevice.m43Pos(this.rigidBody.transform);
+        return this.rigidBody.linearVelocity;
     },
 
     getTransform : function helicopterGetTransformFn()

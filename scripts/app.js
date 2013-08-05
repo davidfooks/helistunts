@@ -155,6 +155,7 @@ function appCreate()
     var altitudeElement = document.getElementById("altitude");
 
     var previousFrameTime = 0;
+    var previousCameraPos = mathDevice.v3BuildZero();
 
     var mainLoop = function mainLoopFn()
     {
@@ -166,19 +167,28 @@ function appCreate()
         }
         previousFrameTime = TurbulenzEngine.time;
 
-        var heliPos = helicopter.getPosition();
         var heliTransform = helicopter.getTransform();
+        var heliVelocity = helicopter.getLinearVelocity();
+        var heliPos = mathDevice.m43Pos(heliTransform);
 
         /*var cameraPos = mathDevice.v3Build(-15.0, 3.0, 0.0);
         mathDevice.m43TransformPoint(helicopterRigidBody.transform, cameraPos, cameraPos);*/
 
-        var cameraDeltaY = mathDevice.m43Up(heliTransform);
-        mathDevice.v3ScalarMul(cameraDeltaY, 3.0, cameraDeltaY);
+        var cameraAt = mathDevice.m43At(heliTransform);
+        mathDevice.v3ScalarMul(cameraAt, -10.0, cameraAt);
 
-        var cameraDeltaX = mathDevice.m43Right(heliTransform);
-        mathDevice.v3ScalarMul(cameraDeltaX, -15.0, cameraDeltaX);
+        var cameraUp = mathDevice.v3ScalarMul(worldUp, 6.0);
 
-        var cameraPos = mathDevice.v3Add(heliPos, mathDevice.v3Add(cameraDeltaX, cameraDeltaY));
+        var cameraNewPos = mathDevice.v3Add(cameraAt, cameraUp);
+        mathDevice.v3AddScalarMul(cameraNewPos, heliVelocity, -0.5, cameraNewPos);
+        var distance = mathDevice.v3Length(cameraNewPos);
+        mathDevice.v3ScalarMul(cameraNewPos, 15 / distance, cameraNewPos);
+        mathDevice.v3Add(heliPos, cameraNewPos, cameraNewPos);
+
+        var cameraDelta = mathDevice.v3Sub(cameraNewPos, previousCameraPos);
+        var cameraPos = mathDevice.v3AddScalarMul(previousCameraPos, cameraDelta, delta * 5);
+
+        mathDevice.v3Copy(cameraPos, previousCameraPos);
 
         camera.lookAt(heliPos, worldUp, cameraPos);
         camera.updateViewMatrix();
