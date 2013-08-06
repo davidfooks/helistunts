@@ -155,7 +155,6 @@ function appCreate()
     var altitudeElement = document.getElementById("altitude");
 
     var previousFrameTime = 0;
-    var previousCameraPos = mathDevice.v3BuildZero();
 
     var mainLoop = function mainLoopFn()
     {
@@ -181,16 +180,12 @@ function appCreate()
 
         var cameraNewPos = mathDevice.v3Add(cameraAt, cameraUp);
         mathDevice.v3AddScalarMul(cameraNewPos, heliVelocity, -0.5, cameraNewPos);
+
         var distance = mathDevice.v3Length(cameraNewPos);
         mathDevice.v3ScalarMul(cameraNewPos, 15 / distance, cameraNewPos);
         mathDevice.v3Add(heliPos, cameraNewPos, cameraNewPos);
 
-        var cameraDelta = mathDevice.v3Sub(cameraNewPos, previousCameraPos);
-        var cameraPos = mathDevice.v3AddScalarMul(previousCameraPos, cameraDelta, delta * 5);
-
-        mathDevice.v3Copy(cameraPos, previousCameraPos);
-
-        camera.lookAt(heliPos, worldUp, cameraPos);
+        camera.lookAt(heliPos, worldUp, cameraNewPos);
         camera.updateViewMatrix();
 
         inputDevice.update();
@@ -216,11 +211,6 @@ function appCreate()
         }
         camera.updateViewProjectionMatrix();
 
-        dynamicsWorld.update();
-
-        physicsManager.update();
-        scene.update();
-
         renderer.update(graphicsDevice, camera, scene, currentTime);
 
         if (graphicsDevice.beginFrame())
@@ -234,6 +224,11 @@ function appCreate()
         }
 
         graphicsDevice.endFrame();
+
+        dynamicsWorld.update();
+
+        physicsManager.update();
+        scene.update();
 
     };
 

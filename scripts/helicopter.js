@@ -26,25 +26,6 @@ Helicopter.prototype =
         var helicopterRigidBody = this.rigidBody;
         var heliUp = mathDevice.m43Up(helicopterRigidBody.transform);
 
-        /*this.collectiveInput -= (this.collectiveInput - this.collectiveRest) * this.collectiveRestLimiter;
-
-        if (keyDown[keyCodes.UP] || keyDown[keyCodes.W])
-        {
-            this.collectiveInput += this.collectiveInputAcceleration;
-            if (this.collectiveInput > this.collectiveInputMax)
-            {
-                this.collectiveInput = this.collectiveInputMax;
-            }
-        }
-        else if (keyDown[keyCodes.DOWN] || keyDown[keyCodes.S])
-        {
-            this.collectiveInput -= this.collectiveInputAcceleration;
-            if (this.collectiveInput < this.collectiveInputMin)
-            {
-                this.collectiveInput = this.collectiveInputMin;
-            }
-        }*/
-
         if (keyDown[keyCodes.UP] || keyDown[keyCodes.W])
         {
             this.collectiveInput = this.collectiveRest + this.collectiveInputAcceleration;
@@ -63,23 +44,32 @@ Helicopter.prototype =
         {
             yaw += 1;
         }
-        else if (keyDown[keyCodes.RIGHT] || keyDown[keyCodes.D])
+        if (keyDown[keyCodes.RIGHT] || keyDown[keyCodes.D])
         {
             yaw -= 1;
         }
 
-        heliUp = mathDevice.v3ScalarMul(heliUp, this.collectiveInput * delta, heliUp);
-        helicopterRigidBody.linearVelocity = mathDevice.v3Add(helicopterRigidBody.linearVelocity, heliUp);
+        if (this.collectiveInput !== 0)
+        {
+            heliUp = mathDevice.v3ScalarMul(heliUp, this.collectiveInput * delta, heliUp);
+            helicopterRigidBody.linearVelocity = mathDevice.v3Add(helicopterRigidBody.linearVelocity, heliUp);
+        }
 
-        yaw = mathDevice.v3Build(0, yaw * this.rudderAcceleration * delta, 0);
-        mathDevice.m43TransformVector(helicopterRigidBody.transform, yaw, yaw);
-        helicopterRigidBody.angularVelocity = mathDevice.v3Add(helicopterRigidBody.angularVelocity, yaw);
+        if (yaw !== 0)
+        {
+            yaw = mathDevice.v3Build(0, yaw * this.rudderAcceleration * delta, 0);
+            mathDevice.m43TransformVector(helicopterRigidBody.transform, yaw, yaw);
+            helicopterRigidBody.angularVelocity = mathDevice.v3Add(helicopterRigidBody.angularVelocity, yaw);
+        }
 
-        var tmpRollAndPitch = this.tmpRollAndPitch;
-        var deltaAcceleration = this.cyclicAcceleration * delta;
-        mathDevice.v3Build(mouseDeltaY * deltaAcceleration, 0, mouseDeltaX * deltaAcceleration, tmpRollAndPitch);
-        mathDevice.m43TransformVector(helicopterRigidBody.transform, tmpRollAndPitch, tmpRollAndPitch);
-        helicopterRigidBody.angularVelocity = mathDevice.v3Add(helicopterRigidBody.angularVelocity, tmpRollAndPitch);
+        if (mouseDeltaX !== 0 && mouseDeltaY !== 0)
+        {
+            var tmpRollAndPitch = this.tmpRollAndPitch;
+            var deltaAcceleration = this.cyclicAcceleration * delta;
+            mathDevice.v3Build(mouseDeltaY * deltaAcceleration, 0, mouseDeltaX * deltaAcceleration, tmpRollAndPitch);
+            mathDevice.m43TransformVector(helicopterRigidBody.transform, tmpRollAndPitch, tmpRollAndPitch);
+            helicopterRigidBody.angularVelocity = mathDevice.v3Add(helicopterRigidBody.angularVelocity, tmpRollAndPitch);
+        }
 
         helicopterRigidBody.active = true;
     },
@@ -117,7 +107,7 @@ Helicopter.prototype =
         });
         dynamicsWorld.addRigidBody(helicopterRigidBody);
 
-        var position = mathDevice.m43BuildTranslation(0.0, 5.0, 0.0);
+        var position = mathDevice.m43BuildTranslation(0.0, 0.0, 0.0);
         var helicopterSceneNode = SceneNode.create({
                 name: 'HeliPhys',
                 local: position,
