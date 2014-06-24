@@ -85,8 +85,36 @@ Helicopter.prototype =
         var dynamicsWorld = this.globals.dynamicsWorld;
         var scene = this.globals.scene;
 
-        var boxShape = physicsDevice.createBoxShape({
-                halfExtents : [1.0, 1.0, 2.0],
+        var helicopterBottomWidth = 0.9;
+        var helicopterPoints = [
+        //top
+            1,   1,  1,
+            -1,  1,  1,
+            1,   1,  -1,
+            -1,  1,  -1,
+
+        //bottom
+            helicopterBottomWidth,  -1,  helicopterBottomWidth,
+            -helicopterBottomWidth, -1,  helicopterBottomWidth,
+            helicopterBottomWidth,  -1,  -helicopterBottomWidth,
+            -helicopterBottomWidth, -1,  -helicopterBottomWidth,
+
+        //front
+            0,   0.5, 1.3,
+        //top blades
+            0,   1.1, 0.5,
+        //tail
+            0,   1,  -3
+        ];
+
+        var i;
+        for (i = 0; i < helicopterPoints.length; i += 1)
+        {
+            helicopterPoints[i] += Math.random() * 0.001;
+        }
+
+        var boxShape = physicsDevice.createConvexHullShape({
+                points : helicopterPoints,
                 margin : collisionMargin
             });
 
@@ -107,12 +135,13 @@ Helicopter.prototype =
         });
         dynamicsWorld.addRigidBody(helicopterRigidBody);
 
-        var position = mathDevice.m43BuildTranslation(0.0, 0.0, 0.0);
+        var position = mathDevice.m43BuildTranslation(0.0, 7.0, 0.0);
         var helicopterSceneNode = SceneNode.create({
                 name: 'HeliPhys',
                 local: position,
                 dynamic: true,
-                disabled: false
+                disabled: false,
+                extents: [-1.0, -1.0, -2.0, 1.0, 1.0, 2.0]
             });
 
         var physicsNode = {

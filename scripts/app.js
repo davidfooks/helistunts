@@ -104,7 +104,7 @@ function appCreate()
         cyclicAcceleration: 0.3
     });
 
-    var initTransform = mathDevice.m43BuildTranslation(0.0, 5.0, 0.0);
+    var initTransform = mathDevice.m43BuildTranslation(0.0, 15.0, 0.0);
     helicopter.addPhysics(initTransform);
 
     var keyCodes = inputDevice.keyCodes;
@@ -221,6 +221,9 @@ function appCreate()
 
             scene.drawPhysicsNodes(graphicsDevice, shaderManager, camera, physicsManager);
             scene.drawPhysicsGeometry(graphicsDevice, shaderManager, camera, physicsManager);
+            //scene.drawSceneNodeHierarchy(graphicsDevice, shaderManager, camera);
+            //scene.drawNodesTree(scene.rootNodes, graphicsDevice, shaderManager, camera, 10);
+            //scene.drawOpaqueNodesExtents(graphicsDevice, shaderManager, camera);
         }
 
         graphicsDevice.endFrame();
