@@ -113,29 +113,28 @@ Helicopter.prototype =
             helicopterPoints[i] += Math.random() * 0.001;
         }
 
-        var boxShape = physicsDevice.createConvexHullShape({
+        var helicopterShape = physicsDevice.createConvexHullShape({
                 points : helicopterPoints,
                 margin : collisionMargin
             });
 
-        var inertia = mathDevice.v3Copy(boxShape.inertia);
+        var inertia = mathDevice.v3Copy(helicopterShape.inertia);
         inertia = mathDevice.v3ScalarMul(inertia, 1.0);
 
         // Initial box is created as a rigid body
         var helicopterRigidBody = this.rigidBody = physicsDevice.createRigidBody({
-            shape : boxShape,
+            shape : helicopterShape,
             mass : 20.0,
             transform : initTransform,
             friction : 0.5,
             restitution : 0.3,
             angularDamping: 0.9,
             linearDamping: 0.1,
-            frozen : false,
-            active : true
+            frozen : false
         });
         dynamicsWorld.addRigidBody(helicopterRigidBody);
 
-        var position = mathDevice.m43BuildTranslation(0.0, 7.0, 0.0);
+        var position = mathDevice.m43BuildTranslation(0.0, 0.0, 0.0);
         var helicopterSceneNode = SceneNode.create({
                 name: 'HeliPhys',
                 local: position,
@@ -158,7 +157,11 @@ Helicopter.prototype =
     {
         var mathDevice = this.globals.mathDevice;
         var helicopterRigidBody = this.rigidBody;
+        var helicopterTransform = helicopterRigidBody.transform;
         return {
+            gpsX: helicopterTransform[9].toFixed(2),
+            gpsY: helicopterTransform[10].toFixed(2),
+            gpsZ: helicopterTransform[11].toFixed(2),
             airSpeed: mathDevice.v3Length(helicopterRigidBody.linearVelocity).toFixed(2),
             altitude: helicopterRigidBody.transform[10].toFixed(2)
         };

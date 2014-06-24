@@ -9,21 +9,6 @@ function DefaultMap() {}
 
 DefaultMap.prototype =
 {
-    update : function defaultmapUpdateFn(helicopter)
-    {
-        var helicopterRigidBody = helicopter.rigidBody;
-        var sensors = this.sensors;
-        var sensorsLength = sensors.length;
-        var sensorsIndex;
-
-        for (sensorsIndex = 0; sensorsIndex < sensorsLength; sensorsIndex += 1)
-        {
-            if (sensors[sensorsIndex].complete(helicopterRigidBody))
-            {
-                window.console.log('Sensor complete: ' + sensorsIndex);
-            }
-        }
-    }
 };
 
 DefaultMap.create = function defaultMapCreateFn(globals)
@@ -64,8 +49,7 @@ DefaultMap.create = function defaultMapCreateFn(globals)
                 transform : mathDevice.m43BuildTranslation(x, y, z),
                 friction : 0.5,
                 restitution : 0.3,
-                frozen : false,
-                active : true
+                frozen : true
             });
         }
         else
@@ -130,16 +114,24 @@ DefaultMap.create = function defaultMapCreateFn(globals)
     addBox([4.0, 1.0, 4.0], -35.0, 21.0,   0.0);
     addBox([4.0, 1.0, 4.0], 0.0,   21.0, -35.0);
 
-    defaultMap.sensors = [
-        Sensor.create(mathDevice, [5, 5, 5], mathDevice.v3Build(35, 26, 0), mathDevice.v3Build(0, 1, 0))
-    ];
+    // var sensors = defaultMap.sensors = [
+    //     Sensor.create(mathDevice, 'checkpoint0', [5, 5, 5], mathDevice.v3Build(35, 26, 0), mathDevice.v3Build(0, 1, 0))
+    // ];
+
+    // var sensorsLength = sensors.length;
+    // var i;
+    // for (i = 0; i < sensorsLength; i += 1)
+    // {
+    //     var sensor = sensors[i];
+    //     sensor.addPhysics(globals);
+    // }
 
     // topple
-    /*addBox([0.5, 0.5, 0.5], 35.0, 21.5, 0.0, true);
+    addBox([0.5, 0.5, 0.5], 35.0, 22.5, 0.0, true);
     addBox([0.5, 0.5, 0.5], 35.0, 23.5, 0.0, true);
     addBox([0.5, 0.5, 0.5], 35.0, 24.5, 0.0, true);
     addBox([0.5, 0.5, 0.5], 35.0, 25.5, 0.0, true);
-    addBox([0.5, 0.5, 0.5], 35.0, 26.5, 0.0, true);*/
+    addBox([0.5, 0.5, 0.5], 35.0, 26.5, 0.0, true);
 
     // arch pillars
     addBox([2.0, 10.0, 2.0], 100.0, 10.0, -35.0);

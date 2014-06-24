@@ -96,7 +96,7 @@ function appCreate()
     // Adds the floor collision object to the physicsDevice
     dynamicsWorld.addCollisionObject(floorObject);
 
-    var map = DefaultMap.create(globals);
+    DefaultMap.create(globals);
     var helicopter = Helicopter.create(globals, {
         collectiveInputAcceleration: 25.0,
         collectiveRest: 0, //8,
@@ -120,7 +120,7 @@ function appCreate()
         mouseDeltaY += deltaY;
     };
 
-    var onMouseDown = function onMouseDownFn(mouseCode, x, y)
+    var onMouseDown = function onMouseDownFn(mouseCode/*, x, y*/)
     {
         if (mouseCode === mouseCodes.BUTTON_0)
         {
@@ -151,6 +151,9 @@ function appCreate()
 
     var mappingTable;
 
+    var gpsXElement = document.getElementById("gpsX");
+    var gpsYElement = document.getElementById("gpsY");
+    var gpsZElement = document.getElementById("gpsZ");
     var airSpeedElement = document.getElementById("airSpeed");
     var altitudeElement = document.getElementById("altitude");
 
@@ -190,11 +193,12 @@ function appCreate()
 
         inputDevice.update();
 
-        map.update(helicopter);
-
         if (airSpeedElement && altitudeElement)
         {
             var helicopterDisplays = helicopter.getDisplays();
+            gpsXElement.innerHTML = helicopterDisplays.gpsX;
+            gpsYElement.innerHTML = helicopterDisplays.gpsY;
+            gpsZElement.innerHTML = helicopterDisplays.gpsZ;
             airSpeedElement.innerHTML = helicopterDisplays.airSpeed;
             altitudeElement.innerHTML = helicopterDisplays.altitude;
         }
