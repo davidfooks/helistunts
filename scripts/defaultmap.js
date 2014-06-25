@@ -192,6 +192,20 @@ DefaultMap.create = function defaultMapCreateFn(globals)
     // arch bar
     addBox([35.0, 1.0, 100.0],  0.0, 21.0, 200.0);
 
+    // tunnel topples!
+    var numX = 7;
+    var numZ = 15;
+
+    var i;
+    var j;
+    for (i = 0; i < numX; i += 1)
+    {
+        for (j = 0; j < numZ; j += 1)
+        {
+            addBox([1.0, 5.0, 1.0], ((i + 1) / (numX + 2)) * 70 - 35, 3.0,  ((j + 1) / (numZ + 2)) * 200 + 100, true);
+        }
+    }
+
 
     return defaultMap;
 };
