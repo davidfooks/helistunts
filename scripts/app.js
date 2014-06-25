@@ -183,11 +183,30 @@ function appCreate()
         var cameraUp = mathDevice.v3ScalarMul(worldUp, 6.0);
 
         var cameraNewPos = mathDevice.v3Add(cameraAt, cameraUp);
+
+        // Velocity influence
         mathDevice.v3AddScalarMul(cameraNewPos, heliVelocity, -0.5, cameraNewPos);
 
         var distance = mathDevice.v3Length(cameraNewPos);
         mathDevice.v3ScalarMul(cameraNewPos, 15 / distance, cameraNewPos);
+
+        var v3Temp = mathDevice.v3Normalize(cameraNewPos);
+        var v3Temp2 = mathDevice.v3Normalize(cameraAt);
+        var v3Temp3 = mathDevice.v3Normalize(cameraUp);
+
+        var dotBack = mathDevice.v3Dot(v3Temp2, v3Temp);
+        var dotUp = mathDevice.v3Dot(v3Temp3, v3Temp);
+
         mathDevice.v3Add(heliPos, cameraNewPos, cameraNewPos);
+
+        // Back influence
+        mathDevice.v3ScalarMul(v3Temp2, (30 * (1.0 - dotBack)), v3Temp2);
+        mathDevice.v3Add(cameraNewPos, v3Temp2, cameraNewPos);
+
+        // Up influence
+        mathDevice.v3ScalarMul(v3Temp3, (5 * (1.0 - dotUp)), v3Temp3);
+        mathDevice.v3Add(cameraNewPos, v3Temp3, cameraNewPos);
+
 
         camera.lookAt(heliPos, worldUp, cameraNewPos);
         camera.updateViewMatrix();
