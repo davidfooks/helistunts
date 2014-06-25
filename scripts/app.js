@@ -96,7 +96,7 @@ function appCreate()
     // Adds the floor collision object to the physicsDevice
     dynamicsWorld.addCollisionObject(floorObject);
 
-    DefaultMap.create(globals);
+    var map = DefaultMap.create(globals);
     var helicopter = Helicopter.create(globals, {
         collectiveInputAcceleration: 25.0,
         collectiveRest: 0, //8,
@@ -104,7 +104,7 @@ function appCreate()
         cyclicAcceleration: 0.3
     });
 
-    var initTransform = mathDevice.m43BuildTranslation(0.0, 15.0, 0.0);
+    var initTransform = mathDevice.m43BuildTranslation(0.0, 25.0, 0.0);
     helicopter.addPhysics(initTransform);
 
     var keyCodes = inputDevice.keyCodes;
@@ -134,7 +134,8 @@ function appCreate()
 
         if (keynum === keyCodes.R)
         {
-            helicopter.teleport(mathDevice.m43BuildTranslation(0.0, 5.0, 0.0));
+            helicopter.teleport(mathDevice.m43Copy(initTransform));
+            map.reset(globals);
         }
     };
 

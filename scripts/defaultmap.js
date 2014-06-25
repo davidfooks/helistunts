@@ -9,6 +9,25 @@ function DefaultMap() {}
 
 DefaultMap.prototype =
 {
+    reset: function defaultMapResetFn(globals)
+    {
+        var mathDevice = globals.mathDevice;
+
+        var rigidBodiesData = this.rigidBodiesData;
+        var rigidBodyId;
+        for (rigidBodyId in rigidBodiesData)
+        {
+            if (rigidBodiesData.hasOwnProperty(rigidBodyId))
+            {
+                var rigidBodyData = rigidBodiesData[rigidBodyId];
+                var rigidBody = rigidBodyData.rigidBody;
+                rigidBody.transform = mathDevice.m43Copy(rigidBodyData.initTransform);
+                rigidBody.linearVelocity = mathDevice.v3Build(0.001, 0.001, 0.001);
+                rigidBody.angularVelocity = mathDevice.v3Build(0.001, 0.001, 0.001);
+                rigidBody.active = true;
+            }
+        }
+    }
 };
 
 DefaultMap.create = function defaultMapCreateFn(globals)
@@ -21,17 +40,20 @@ DefaultMap.create = function defaultMapCreateFn(globals)
 
     var defaultMap = new DefaultMap();
 
+    defaultMap.rigidBodiesData = {};
+    var rigidBodiesCount = 0;
+
     var count = 0;
 
     var addBox = function addBoxFn(halfExtents, x, y, z, dynamic)
     {
         dynamic = dynamic || false;
 
-        var collisionMargin = 0.005;
+        //var collisionMargin = 0.005;
 
         var boxShape = physicsDevice.createBoxShape({
-                halfExtents : halfExtents,
-                margin : collisionMargin
+                halfExtents : halfExtents//,
+                //margin : collisionMargin
             });
 
         var inertia = mathDevice.v3Copy(boxShape.inertia);
@@ -42,15 +64,25 @@ DefaultMap.create = function defaultMapCreateFn(globals)
         // Initial box is created as a rigid body
         if (dynamic)
         {
+            var initTransform = mathDevice.m43BuildTranslation(x, y, z);
             boxBody = physicsDevice.createRigidBody({
                 shape : boxShape,
-                mass: 1.0,
+                mass: 0.1,
                 inertia: inertia,
-                transform : mathDevice.m43BuildTranslation(x, y, z),
+                transform : initTransform,
                 friction : 0.5,
                 restitution : 0.3,
-                frozen : true
+                linearVelocity : mathDevice.v3Build(0.001, 0.001, 0.001),
+                angularVelocity : mathDevice.v3Build(0.001, 0.001, 0.001)
+                //active : false
             });
+
+            defaultMap.rigidBodiesData[rigidBodiesCount] = {
+                rigidBody: boxBody,
+                initTransform: mathDevice.m43Copy(initTransform)
+            };
+
+            rigidBodiesCount += 1;
         }
         else
         {
@@ -72,7 +104,6 @@ DefaultMap.create = function defaultMapCreateFn(globals)
                 dynamic: dynamic,
                 disabled: false
             });
-
         count += 1;
 
         var physicsNode = {
@@ -127,11 +158,10 @@ DefaultMap.create = function defaultMapCreateFn(globals)
     // }
 
     // topple
-    addBox([0.5, 0.5, 0.5], 35.0, 22.5, 0.0, true);
-    addBox([0.5, 0.5, 0.5], 35.0, 23.5, 0.0, true);
-    addBox([0.5, 0.5, 0.5], 35.0, 24.5, 0.0, true);
-    addBox([0.5, 0.5, 0.5], 35.0, 25.5, 0.0, true);
-    addBox([0.5, 0.5, 0.5], 35.0, 26.5, 0.0, true);
+    addBox([1.0, 5.0, 1.0],  35.0, 27.5,   0.0, true);
+    addBox([1.0, 5.0, 1.0],   0.0, 27.5,  35.0, true);
+    addBox([1.0, 5.0, 1.0], -35.0, 27.5,   0.0, true);
+    addBox([1.0, 5.0, 1.0],   0.0, 27.5, -35.0, true);
 
     // arch pillars
     addBox([2.0, 10.0, 2.0], 100.0, 10.0, -35.0);
