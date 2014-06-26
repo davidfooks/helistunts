@@ -56,23 +56,6 @@ DefaultMap.prototype =
         var group;
         var mask;
 
-        function onPreSolveContact(/*objectA, objectB, contacts*/)
-        {
-            console.log('onPreSolveContact');
-        }
-        function onProcessedContacts(/*objectA, objectB, contacts*/)
-        {
-            console.log('onProcessedContacts');
-        }
-        function onAddedContacts(/*objectA, objectB, contacts*/)
-        {
-            console.log('onAddedContacts');
-        }
-        function onRemovedContacts(/*objectA, objectB, contacts*/)
-        {
-            console.log('onRemovedContacts');
-        }
-
         // Initial box is created as a rigid body
         if (dynamic)
         {
@@ -107,10 +90,8 @@ DefaultMap.prototype =
                 kinematic : false,
                 group: group,
                 mask: mask,
-                onPreSolveContact: onPreSolveContact,
-                onProcessedContacts: onProcessedContacts,
-                onAddedContacts: onAddedContacts,
-                onRemovedContacts: onRemovedContacts,
+                onAddedContacts: params.onAddedContacts,
+                onRemovedContacts: params.onRemovedContacts,
                 trigger: params.trigger || false,
                 contactCallbacksMask: params.contactCallbacksMask || 0,
             });
@@ -159,16 +140,8 @@ DefaultMap.create = function defaultMapCreateFn(globals)
 {
     var defaultMap = new DefaultMap();
 
-    var physicsDevice = globals.physicsDevice;
-
     var toppleBlockParams = {
         dynamic: true
-    };
-
-    var sensorParams = {
-        trigger: true,
-        mask: physicsDevice.FILTER_ALL,
-        contactCallbacksMask: physicsDevice.FILTER_ALL
     };
 
     defaultMap.globals = globals;
@@ -192,7 +165,7 @@ DefaultMap.create = function defaultMapCreateFn(globals)
     defaultMap.addBox([4.0, 1.0, 4.0], 0.0,   21.0, -35.0);
 
     defaultMap.sensors = [
-        Sensor.create(defaultMap.addBox([4.0, 4.0, 4.0], 35.0, 28.0, 0.0, sensorParams))
+        Sensor.create(globals, defaultMap, [4.0, 4.0, 4.0], 35.0, 28.0, 0.0)
     ];
 
     // topple

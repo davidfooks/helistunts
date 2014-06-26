@@ -157,6 +157,7 @@ function appCreate()
     var gpsZElement = document.getElementById("gpsZ");
     var airSpeedElement = document.getElementById("airSpeed");
     var altitudeElement = document.getElementById("altitude");
+    var activeSensorElement = document.getElementById("activeSensor");
 
     var previousFrameTime = 0;
 
@@ -221,6 +222,17 @@ function appCreate()
             gpsZElement.innerHTML = helicopterDisplays.gpsZ;
             airSpeedElement.innerHTML = helicopterDisplays.airSpeed;
             altitudeElement.innerHTML = helicopterDisplays.altitude;
+
+            var sensorActive = false;
+            var sensors = map.sensors;
+            var sensorsLength = sensors.length;
+            var i;
+            for (i = 0; i < sensorsLength; i += 1)
+            {
+                sensorActive = sensorActive || sensors[i].active;
+            }
+
+            activeSensorElement.innerHTML = sensorActive;
         }
 
         helicopter.update(delta, keyDown, mouseDeltaX, mouseDeltaY);
