@@ -29,8 +29,10 @@ DefaultMap.prototype =
         }
     },
 
-    addBox: function defaultMapAddBoxFn(halfExtents, x, y, z, dynamic)
+    addBox: function defaultMapAddBoxFn(halfExtents, x, y, z, params)
     {
+        params = params || {};
+
         var globals = this.globals;
         var mathDevice = globals.mathDevice;
         var physicsDevice = globals.physicsDevice;
@@ -38,7 +40,7 @@ DefaultMap.prototype =
         var dynamicsWorld = globals.dynamicsWorld;
         var scene = globals.scene;
 
-        dynamic = dynamic || false;
+        var dynamic = params.dynamic || false;
 
         var collisionMargin = 0.005;
 
@@ -51,6 +53,25 @@ DefaultMap.prototype =
         inertia = mathDevice.v3ScalarMul(inertia, 1.0);
 
         var boxBody;
+        var group;
+        var mask;
+
+        function onPreSolveContact(/*objectA, objectB, contacts*/)
+        {
+            console.log('onPreSolveContact');
+        }
+        function onProcessedContacts(/*objectA, objectB, contacts*/)
+        {
+            console.log('onProcessedContacts');
+        }
+        function onAddedContacts(/*objectA, objectB, contacts*/)
+        {
+            console.log('onAddedContacts');
+        }
+        function onRemovedContacts(/*objectA, objectB, contacts*/)
+        {
+            console.log('onRemovedContacts');
+        }
 
         // Initial box is created as a rigid body
         if (dynamic)
@@ -65,7 +86,6 @@ DefaultMap.prototype =
                 restitution : 0.3,
                 linearVelocity : mathDevice.v3Build(0.001, 0.001, 0.001),
                 angularVelocity : mathDevice.v3Build(0.001, 0.001, 0.001)
-                //active : false
             });
 
             this.rigidBodiesData[this.rigidBodiesCount] = {
@@ -77,14 +97,22 @@ DefaultMap.prototype =
         }
         else
         {
+            group = params.hasOwnProperty('group') ? params.group : physicsDevice.FILTER_STATIC;
+            mask = params.hasOwnProperty('mask') ? params.mask : physicsDevice.FILTER_ALL;
             boxBody = physicsDevice.createCollisionObject({
                 shape : boxShape,
                 transform : mathDevice.m43BuildTranslation(x, y, z),
                 friction : 0.5,
                 restitution : 0.3,
                 kinematic : false,
-                group: physicsDevice.FILTER_STATIC,
-                mask: physicsDevice.FILTER_ALL
+                group: group,
+                mask: mask,
+                onPreSolveContact: onPreSolveContact,
+                onProcessedContacts: onProcessedContacts,
+                onAddedContacts: onAddedContacts,
+                onRemovedContacts: onRemovedContacts,
+                trigger: params.trigger || false,
+                contactCallbacksMask: params.contactCallbacksMask || 0,
             });
         }
 
@@ -114,19 +142,34 @@ DefaultMap.prototype =
         }
         else
         {
-            // TODO: should be setStatic?  setDynamic takes no args.
-            //boxSceneNode.setDynamic(false);
-            boxSceneNode.setDynamic();
+            if (!params.trigger)
+            {
+                // TODO: should be setStatic?  setDynamic takes no args.
+                //boxSceneNode.setDynamic(false);
+                boxSceneNode.setDynamic();
+            }
             physicsManager.enableHierarchy(boxSceneNode, true);
         }
+
+        return physicsNode;
     }
 };
 
 DefaultMap.create = function defaultMapCreateFn(globals)
 {
-    var mathDevice = globals.mathDevice;
-
     var defaultMap = new DefaultMap();
+
+    var physicsDevice = globals.physicsDevice;
+
+    var toppleBlockParams = {
+        dynamic: true
+    };
+
+    var sensorParams = {
+        trigger: true,
+        mask: physicsDevice.FILTER_ALL,
+        contactCallbacksMask: physicsDevice.FILTER_ALL
+    };
 
     defaultMap.globals = globals;
     defaultMap.rigidBodiesData = {};
@@ -148,23 +191,15 @@ DefaultMap.create = function defaultMapCreateFn(globals)
     defaultMap.addBox([4.0, 1.0, 4.0], -35.0, 21.0,   0.0);
     defaultMap.addBox([4.0, 1.0, 4.0], 0.0,   21.0, -35.0);
 
-    var sensors = defaultMap.sensors = [
-        Sensor.create(mathDevice, 'checkpoint0', [5, 5, 5], mathDevice.v3Build(35, 26, 0), mathDevice.v3Build(0, 1, 0))
+    defaultMap.sensors = [
+        Sensor.create(defaultMap.addBox([4.0, 4.0, 4.0], 35.0, 28.0, 0.0, sensorParams))
     ];
 
-    var sensorsLength = sensors.length;
-    var i;
-    for (i = 0; i < sensorsLength; i += 1)
-    {
-        var sensor = sensors[i];
-        sensor.addPhysics(globals);
-    }
-
     // topple
-    defaultMap.addBox([1.0, 5.0, 1.0],  35.0, 27.5,   0.0, true);
-    defaultMap.addBox([1.0, 5.0, 1.0],   0.0, 27.5,  35.0, true);
-    defaultMap.addBox([1.0, 5.0, 1.0], -35.0, 27.5,   0.0, true);
-    defaultMap.addBox([1.0, 5.0, 1.0],   0.0, 27.5, -35.0, true);
+    // defaultMap.addBox([1.0, 5.0, 1.0],  35.0, 27.5,   0.0, toppleBlockParams);
+    // defaultMap.addBox([1.0, 5.0, 1.0],   0.0, 27.5,  35.0, toppleBlockParams);
+    // defaultMap.addBox([1.0, 5.0, 1.0], -35.0, 27.5,   0.0, toppleBlockParams);
+    // defaultMap.addBox([1.0, 5.0, 1.0],   0.0, 27.5, -35.0, toppleBlockParams);
 
     // arch pillars
     defaultMap.addBox([2.0, 10.0, 2.0], 100.0, 10.0, -35.0);
@@ -199,12 +234,13 @@ DefaultMap.create = function defaultMapCreateFn(globals)
     var numX = 7;
     var numZ = 15;
 
+    var i;
     var j;
     for (i = 0; i < numX; i += 1)
     {
         for (j = 0; j < numZ; j += 1)
         {
-            defaultMap.addBox([1.0, 5.0, 1.0], ((i + 1) / (numX + 2)) * 70 - 35, 3.0,  ((j + 1) / (numZ + 2)) * 200 + 100, true);
+            defaultMap.addBox([1.0, 5.0, 1.0], ((i + 1) / (numX + 2)) * 70 - 35, 3.0,  ((j + 1) / (numZ + 2)) * 200 + 100, toppleBlockParams);
         }
     }
 
