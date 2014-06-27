@@ -160,16 +160,8 @@ function appCreate()
 
     var previousFrameTime = 0;
 
-    var mainLoop = function mainLoopFn()
+    var updateCamera = function updateCameraFn()
     {
-        var currentTime = TurbulenzEngine.time;
-        var delta = currentTime - previousFrameTime;
-        if (delta > 0.1)
-        {
-            delta = 0.1;
-        }
-        previousFrameTime = TurbulenzEngine.time;
-
         var heliTransform = helicopter.getTransform();
         var heliVelocity = helicopter.getLinearVelocity();
         var heliPos = mathDevice.m43Pos(heliTransform);
@@ -210,8 +202,53 @@ function appCreate()
 
         camera.lookAt(heliPos, worldUp, cameraNewPos);
         camera.updateViewMatrix();
+    };
+
+    var updateCamera2 = function updateCamera2Fn()
+    {
+        var heliTransform = helicopter.getTransform();
+        var heliVelocity = helicopter.getLinearVelocity();
+        var heliPos = mathDevice.m43Pos(heliTransform);
+        var heliUp = mathDevice.m43Up(heliTransform);
+        var heliRight = mathDevice.m43Right(heliTransform);
+
+        var quatHeliRotation = mathDevice.quatFromM43(heliTransform);
+
+        var quatYRotation = mathDevice.quatFromAxisRotation(heliUp, Math.PI * 2 * -1/16 + Math.PI);
+        var quatXRotation = mathDevice.quatFromAxisRotation(heliRight, Math.PI * 2 * -1/16);//Math.PI * 2 * 1/8);
+
+        var quatTemp = mathDevice.quatMul(quatHeliRotation, quatYRotation);
+        mathDevice.quatMul(quatTemp, quatXRotation, quatTemp);
+
+        var cameraNewPos = mathDevice.v3Build(0, 0, 0);
+
+        mathDevice.quatTransformVector(quatTemp, mathDevice.v3Build(0, 0, 10), cameraNewPos);
+        mathDevice.v3Add(heliPos, cameraNewPos, cameraNewPos);
+
+        var quatPosCamera = mathDevice.quatPosBuild(quatTemp, cameraNewPos);
+        mathDevice.m43FromQuatPos(quatPosCamera, camera.matrix);
+
+        mathDevice.m43SetPos(camera.matrix, cameraNewPos);
+
+        camera.updateViewMatrix();
+    };
+
+    var mainLoop = function mainLoopFn()
+    {
+        var currentTime = TurbulenzEngine.time;
+        var delta = currentTime - previousFrameTime;
+        if (delta > 0.1)
+        {
+            delta = 0.1;
+        }
+        previousFrameTime = TurbulenzEngine.time;
 
         inputDevice.update();
+
+        dynamicsWorld.update();
+
+        physicsManager.update();
+
 
         if (airSpeedElement && altitudeElement)
         {
@@ -227,6 +264,10 @@ function appCreate()
         mouseDeltaX = 0;
         mouseDeltaY = 0;
 
+        scene.update();
+
+        updateCamera();
+
         var aspectRatio = (graphicsDevice.width / graphicsDevice.height);
         if (aspectRatio !== camera.aspectRatio)
         {
@@ -234,6 +275,7 @@ function appCreate()
             camera.updateProjectionMatrix();
         }
         camera.updateViewProjectionMatrix();
+        camera.updateFrustumPlanes();
 
         renderer.update(graphicsDevice, camera, scene, currentTime);
 
@@ -251,12 +293,6 @@ function appCreate()
         }
 
         graphicsDevice.endFrame();
-
-        dynamicsWorld.update();
-
-        physicsManager.update();
-        scene.update();
-
     };
 
     var loadingLoop = function loadingLoopFn()
