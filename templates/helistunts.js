@@ -2,7 +2,6 @@
 
 /*{# Add library javascript files here e.g. #}*/
 /*{{ javascript("jslib/camera.js") }}*/
-/*{{ javascript("jslib/floor.js") }}*/
 
 /*{{ javascript("jslib/scenenode.js") }}*/
 /*{{ javascript("jslib/scene.js") }}*/
@@ -27,6 +26,7 @@
 /*{{ javascript("scripts/sensor.js") }}*/
 /*{{ javascript("scripts/defaultmap.js") }}*/
 /*{{ javascript("scripts/helicopter.js") }}*/
+/*{{ javascript("scripts/floor.js") }}*/
 
 /*global TurbulenzEngine: false*/
 /*global appCreate: false */
