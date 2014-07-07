@@ -125,6 +125,8 @@ function appCreate()
         if (mouseCode === mouseCodes.BUTTON_0)
         {
             inputDevice.lockMouse();
+
+            helicopter.fire();
         }
     };
 

@@ -18,6 +18,86 @@ Helicopter.prototype =
         helicopterRigidBody.angularVelocity = mathDevice.v3BuildZero();
     },
 
+    fire : function helicopterFireFn()
+    {
+        var globals = this.globals;
+        var mathDevice = globals.mathDevice;
+        var physicsDevice = globals.physicsDevice;
+        var physicsManager = globals.physicsManager;
+        var dynamicsWorld = globals.dynamicsWorld;
+        var scene = globals.scene;
+
+        var helicopterRigidBody = this.rigidBody;
+        var m43HelicopterTransform = helicopterRigidBody.transform;
+
+        var v3At = mathDevice.m43At(m43HelicopterTransform);
+        var v3Pos = mathDevice.m43Pos(m43HelicopterTransform);
+        var v3Position = mathDevice.v3AddScalarMul(v3Pos, v3At, 3);
+        var v3Velocity = mathDevice.v3ScalarMul(v3At, 50);
+
+        var m43BulletTransform = mathDevice.m43Build(
+            m43HelicopterTransform[0],
+            m43HelicopterTransform[1],
+            m43HelicopterTransform[2],
+            m43HelicopterTransform[3],
+            m43HelicopterTransform[4],
+            m43HelicopterTransform[5],
+            m43HelicopterTransform[6],
+            m43HelicopterTransform[7],
+            m43HelicopterTransform[8],
+            v3Position[0],
+            v3Position[1],
+            v3Position[2]);
+
+        var collisionMargin = 0.005;
+
+        var boxShape = physicsDevice.createBoxShape({
+                halfExtents : this.bulletHalfExtents,
+                margin : collisionMargin
+            });
+
+        var inertia = mathDevice.v3Copy(boxShape.inertia);
+        inertia = mathDevice.v3ScalarMul(inertia, 1.0);
+
+        var boxBody;
+
+        // Initial box is created as a rigid body
+        boxBody = physicsDevice.createRigidBody({
+            shape : boxShape,
+            mass: 0.1,
+            inertia: inertia,
+            transform : m43BulletTransform,
+            friction : 0.5,
+            restitution : 0.3,
+            linearVelocity : v3Velocity,
+            angularVelocity : mathDevice.v3Build(0.001, 0.001, 0.001)
+            //active : false
+        });
+
+        var boxSceneNode = SceneNode.create({
+                name: 'BulletPhys' + this.bulletCount,
+                local: mathDevice.m43Copy(m43BulletTransform),
+                dynamic: true,
+                disabled: false
+            });
+        this.bulletCount += 1;
+
+        var physicsNode = {
+            body : boxBody,
+            target : boxSceneNode,
+            dynamic : true
+        };
+
+        scene.addRootNode(boxSceneNode);
+        boxSceneNode.physicsNodes = [physicsNode];
+
+        physicsManager.physicsNodes.push(physicsNode);
+        // TODO: should be setStatic?  setDynamic takes no args.
+        //boxSceneNode.setDynamic(false);
+        boxSceneNode.setDynamic();
+        physicsManager.enableHierarchy(boxSceneNode, true);
+    },
+
     update : function helicopterUpdateFn(delta, keyDown, mouseDeltaX, mouseDeltaY)
     {
         var mathDevice = this.globals.mathDevice;
@@ -186,6 +266,10 @@ Helicopter.create = function helicopterCreateFn(globals, stats)
 
     helicopter.globals = globals;
     helicopter.rigidBody = null;
+
+    helicopter.bulletCount = 0;
+
+    helicopter.bulletHalfExtents = [0.1, 0.1, 0.5];
 
     helicopter.collectiveInputMax = stats.collectiveInputMax;
     helicopter.collectiveInputMin = stats.collectiveInputMin;
