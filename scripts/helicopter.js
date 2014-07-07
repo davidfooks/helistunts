@@ -29,11 +29,12 @@ Helicopter.prototype =
 
         var helicopterRigidBody = this.rigidBody;
         var m43HelicopterTransform = helicopterRigidBody.transform;
+        var v3HelicopterVelocity = helicopterRigidBody.linearVelocity;
 
         var v3At = mathDevice.m43At(m43HelicopterTransform);
         var v3Pos = mathDevice.m43Pos(m43HelicopterTransform);
         var v3Position = mathDevice.v3AddScalarMul(v3Pos, v3At, 3);
-        var v3Velocity = mathDevice.v3ScalarMul(v3At, 50);
+        var v3Velocity = mathDevice.v3AddScalarMul(v3HelicopterVelocity, v3At, 50);
 
         var m43BulletTransform = mathDevice.m43Build(
             m43HelicopterTransform[0],
@@ -152,6 +153,11 @@ Helicopter.prototype =
         }
 
         helicopterRigidBody.active = true;
+
+        if (this.firing)
+        {
+            this.fire();
+        }
     },
 
     addPhysics : function helicopterAddPhysicsFn(initTransform)
@@ -271,6 +277,7 @@ Helicopter.create = function helicopterCreateFn(globals, stats)
 
     helicopter.bulletHalfExtents = [0.1, 0.1, 0.5];
 
+    helicopter.firing = false;
     helicopter.collectiveInputMax = stats.collectiveInputMax;
     helicopter.collectiveInputMin = stats.collectiveInputMin;
     helicopter.collectiveInputAcceleration = stats.collectiveInputAcceleration;

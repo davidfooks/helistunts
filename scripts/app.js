@@ -122,11 +122,18 @@ function appCreate()
 
     var onMouseDown = function onMouseDownFn(mouseCode/*, x, y*/)
     {
+        inputDevice.lockMouse();
         if (mouseCode === mouseCodes.BUTTON_0)
         {
-            inputDevice.lockMouse();
+            helicopter.firing = true;
+        }
+    };
 
-            helicopter.fire();
+    var onMouseUp = function onMouseUpFn(mouseCode/*, x, y*/)
+    {
+        if (mouseCode === mouseCodes.BUTTON_0)
+        {
+            helicopter.firing = false;
         }
     };
 
@@ -151,6 +158,7 @@ function appCreate()
 
     inputDevice.addEventListener('mousemove', onMouseMove);
     inputDevice.addEventListener('mousedown', onMouseDown);
+    inputDevice.addEventListener('mouseup', onMouseUp);
 
     var mappingTable;
 
@@ -250,7 +258,6 @@ function appCreate()
         dynamicsWorld.update();
 
         physicsManager.update();
-
 
         if (airSpeedElement && altitudeElement)
         {
